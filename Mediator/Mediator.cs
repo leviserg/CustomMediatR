@@ -11,22 +11,45 @@ namespace CustomMediatR.Mediator
 
             services.AddScoped<ISender, Sender>();
 
-            var handlerInerfaceType = typeof(IRequestHandler<,>);
+            RegisterRequestHandlers(services, assembly);
 
-            var handlerTypes = assembly.GetTypes()
+            RegisterNotificationHandlers(services, assembly);
+
+            return services;
+        }
+
+        private static void RegisterRequestHandlers(IServiceCollection services, Assembly assembly)
+        {
+            var requestHandlerInterfaceType = typeof(IRequestHandler<,>);
+            var requestHandlerTypes = assembly.GetTypes()
                 .Where(type => !type.IsInterface && !type.IsAbstract)
                 .SelectMany(
                     type => type.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInerfaceType)
+                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == requestHandlerInterfaceType)
                     .Select(i => new { Interface = i, Implementation = type })
-                 );
+                );
 
-            foreach (var handlerType in handlerTypes)
+            foreach (var handlerType in requestHandlerTypes)
             {
                 services.AddScoped(handlerType.Interface, handlerType.Implementation);
             }
+        }
 
-            return services;
+        private static void RegisterNotificationHandlers(IServiceCollection services, Assembly assembly)
+        {
+            var notificationHandlerInterfaceType = typeof(INotificationHandler<>);
+            var notificationHandlerTypes = assembly.GetTypes()
+                .Where(type => !type.IsInterface && !type.IsAbstract)
+                .SelectMany(
+                    type => type.GetInterfaces()
+                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == notificationHandlerInterfaceType)
+                    .Select(i => new { Interface = i, Implementation = type })
+                );
+
+            foreach (var handlerType in notificationHandlerTypes)
+            {
+                services.AddScoped(handlerType.Interface, handlerType.Implementation);
+            }
         }
     }
 }
