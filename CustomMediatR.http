@@ -1,0 +1,6 @@
+@CustomMediatR_HostAddress = http://localhost:5151
+
+GET {{CustomMediatR_HostAddress}}/api/Games/
+Accept: application/json
+
+###
